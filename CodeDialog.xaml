@@ -1,0 +1,23 @@
+<Window x:Class="Distraint.CodeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Confirm" Width="480" SizeToContent="Height" MinWidth="360"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI" FontSize="14">
+    <StackPanel Margin="24">
+        <TextBlock x:Name="TitleText" FontSize="20" FontWeight="Bold"/>
+        <TextBlock x:Name="BodyText" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource SubTextBrush}"/>
+        <TextBlock Text="Type it by hand, exactly as shown. Capitals and symbols count, and there are no spaces."
+                   TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource SubTextBrush}"/>
+        <TextBlock x:Name="CodeText" FontFamily="Consolas" FontSize="24" FontWeight="Bold" TextAlignment="Center"
+                   Margin="0,18,0,0"/>
+        <TextBox x:Name="CodeBox" MaxLength="16" Margin="0,16,0,0" FontFamily="Consolas" FontSize="16"
+                 AllowDrop="False" ContextMenu="{x:Null}"/>
+        <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}" Margin="0,8,0,0"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Cancel" Margin="0,0,8,0" Click="Cancel_Click"/>
+            <Button Content="Confirm" Style="{StaticResource AccentButton}" Click="Ok_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

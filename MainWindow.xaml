@@ -1,0 +1,163 @@
+<Window x:Class="Distraint.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Distraint" Width="1100" Height="720" MinWidth="520" MinHeight="460"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI" FontSize="14">
+    <Window.Resources>
+        <!-- One row of an app list (AppRow is defined in MainWindow.xaml.cs). -->
+        <DataTemplate x:Key="AppRowTemplate">
+            <Grid Margin="0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="{Binding Icon}" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Sub}" Visibility="{Binding SubVis}" FontSize="12"
+                               Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis"/>
+                    <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1000" Margin="0,5,0,0"
+                                 Visibility="{Binding BarVis}"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top bar -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Distraint" FontSize="26" FontWeight="Bold" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="AddButton" Content="+  Add" Margin="0,0,8,0" Click="AddButton_Click"/>
+                <Button Content="Settings" Click="SettingsButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Body: two columns when wide, stacked when narrow (see AdaptLayout in the code-behind) -->
+        <Grid x:Name="Body" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="260"/>
+                <ColumnDefinition Width="1.5*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Progress card -->
+            <Border x:Name="LeftCard" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <!-- The Viewbox scales the ring with the window -->
+                    <Viewbox Grid.Row="0" Stretch="Uniform" MaxWidth="380" Margin="0,0,0,12">
+                        <Grid Width="220" Height="220">
+                            <Ellipse Width="196" Height="196" Stroke="{DynamicResource LineBrush}" StrokeThickness="14"/>
+                            <Path x:Name="RingArc" Width="220" Height="220" Stroke="{DynamicResource AccentBrush}"
+                                  StrokeThickness="14" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock x:Name="TimerText" Text="00:00" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="GoalText" Text="of 30:00" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Viewbox>
+                    <TextBlock Grid.Row="1" x:Name="StatusText" TextWrapping="Wrap" TextAlignment="Center"
+                               Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,14"/>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="StudyButton" Grid.Column="0" Content="Start studying" Style="{StaticResource AccentButton}"
+                                Padding="16,12" Click="StudyButton_Click"/>
+                        <Button x:Name="UnlockButton" Grid.Column="2" Content="Unlock" Padding="16,12" Click="UnlockButton_Click"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Lists: three cards that share the full height; each scrolls its own list -->
+            <Grid x:Name="RightPanel" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="10,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1.3*" MinHeight="100"/>
+                    <RowDefinition Height="1*" MinHeight="100"/>
+                    <RowDefinition Height="1*" MinHeight="100"/>
+                </Grid.RowDefinitions>
+
+                <!-- Locked apps -->
+                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Locked apps" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="LockedCount" HorizontalAlignment="Right" Foreground="{DynamicResource SubTextBrush}"/>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock x:Name="LockedEmpty" Text="Nothing locked yet. Use + Add, then Apps to lock."
+                               Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"/>
+                                <ItemsControl x:Name="LockedList" ItemTemplate="{StaticResource AppRowTemplate}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Study apps -->
+                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Study apps" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="StudyCount" HorizontalAlignment="Right" Foreground="{DynamicResource SubTextBrush}"/>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock x:Name="StudyEmpty" Text="No study apps yet. Time in these counts toward your goal."
+                               Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"/>
+                                <ItemsControl x:Name="StudyList" ItemTemplate="{StaticResource AppRowTemplate}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Strict lock (click opens the strict lock page) -->
+                <Border x:Name="StrictCard" Grid.Row="2" Style="{StaticResource Card}" Cursor="Hand"
+            MouseLeftButtonUp="StrictCard_Click">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Strict lock" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="StrictCount" HorizontalAlignment="Right" Foreground="{DynamicResource SubTextBrush}"/>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock x:Name="StrictEmpty" Text="Click to set up apps that stay closed no matter what."
+                               Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"/>
+                                <ItemsControl x:Name="StrictList" ItemTemplate="{StaticResource AppRowTemplate}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

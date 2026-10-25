@@ -1,0 +1,45 @@
+<Window x:Class="Distraint.SetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Welcome to Distraint" Width="620" Height="720" MinWidth="400" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI" FontSize="14">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="28,24,28,8" MaxWidth="720">
+                <TextBlock Text="Welcome to Distraint" FontSize="28" FontWeight="Bold"/>
+                <TextBlock Text="Study first, then your distracting apps open. A few choices to start with (you can change them later in Settings, with changes applying at the next daily reset)."
+                           TextWrapping="Wrap" Margin="0,6,0,20" Foreground="{DynamicResource SubTextBrush}"/>
+
+                <TextBlock Text="How should study apps count?" FontWeight="SemiBold"/>
+                <WrapPanel Margin="0,8,0,0">
+                    <RadioButton x:Name="CombineTotal" GroupName="c" Content="Combined: time adds up" Style="{StaticResource Segment}" IsChecked="True"/>
+                    <RadioButton x:Name="CombineEach" GroupName="c" Content="Individual: each app needs the full time" Style="{StaticResource Segment}"/>
+                </WrapPanel>
+
+                <TextBlock Text="Minutes to study each day" FontWeight="SemiBold" Margin="0,12,0,6"/>
+                <TextBox x:Name="RequiredBox" Text="30" Width="120" HorizontalAlignment="Left"/>
+
+                <TextBlock Text="How should unlock time count?" FontWeight="SemiBold" Margin="0,20,0,0"/>
+                <WrapPanel Margin="0,8,0,0">
+                    <RadioButton x:Name="LimitShared" GroupName="l" Content="Shared: one timer for all locked apps" Style="{StaticResource Segment}" IsChecked="True"/>
+                    <RadioButton x:Name="LimitEach" GroupName="l" Content="Individual: each locked app gets its own time" Style="{StaticResource Segment}"/>
+                </WrapPanel>
+
+                <TextBlock Text="Unlock length in minutes (0 = until the daily reset)" FontWeight="SemiBold" Margin="0,12,0,6"/>
+                <TextBox x:Name="UnlockBox" Text="60" Width="120" HorizontalAlignment="Left"/>
+
+                <TextBlock Text="Protection" FontWeight="SemiBold" Margin="0,20,0,6"/>
+                <CheckBox x:Name="ProtectCheck" IsChecked="True" Content="Make Distraint harder to quit on an impulse (typed code needed to exit)"/>
+                <CheckBox x:Name="StartupCheck" IsChecked="True" Margin="0,10,0,0" Content="Start Distraint with Windows"/>
+            </StackPanel>
+        </ScrollViewer>
+        <Button Grid.Row="1" Content="Get started" Style="{StaticResource AccentButton}" Padding="28,12"
+                HorizontalAlignment="Right" Margin="28,12,28,24" Click="Done_Click"/>
+    </Grid>
+</Window>

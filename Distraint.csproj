@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Both WPF and WinForms are used (WinForms only for the tray icon and screen list).
+         Implicit usings are off on purpose: with both enabled, names like Button/Application clash. -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <RootNamespace>Distraint</RootNamespace>
+    <AssemblyName>Distraint</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+	<ApplicationIcon>distraint.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="distraint.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="distraint.ico" />
+  </ItemGroup>
+</Project>
