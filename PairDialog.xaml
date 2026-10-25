@@ -1,0 +1,19 @@
+<Window x:Class="Distraint.PairDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pair a device" Width="480" SizeToContent="Height" MinWidth="360"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI" FontSize="14">
+    <StackPanel Margin="24">
+        <TextBlock Text="Pair a device" FontSize="22" FontWeight="Bold"/>
+        <TextBlock Text="On the other device, open Distraint's sync screen and enter this code. Both devices must be on the same Wi-Fi."
+                   TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource SubTextBrush}"/>
+        <TextBlock x:Name="CodeText" FontFamily="Consolas" FontSize="44" FontWeight="Bold" TextAlignment="Center" Margin="0,20,0,0"/>
+        <TextBlock x:Name="TimeText" TextAlignment="Center" Foreground="{DynamicResource SubTextBrush}" Margin="0,4,0,0"/>
+        <TextBlock Text="If the other device can't find this PC automatically, type one of these addresses there:"
+                   TextWrapping="Wrap" Margin="0,20,0,0" Foreground="{DynamicResource SubTextBrush}"/>
+        <TextBlock x:Name="AddressText" FontFamily="Consolas" Margin="0,6,0,0" TextWrapping="Wrap"/>
+        <Button Content="Cancel" HorizontalAlignment="Right" Margin="0,20,0,0" Click="Cancel_Click"/>
+    </StackPanel>
+</Window>

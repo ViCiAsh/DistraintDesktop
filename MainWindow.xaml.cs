@@ -225,6 +225,8 @@ namespace Distraint
                     state.RequiredMin * n, n, state.RequiredMin);
             }
             else status = string.Format(CultureInfo.InvariantCulture, "Study {0} min today to unlock your apps.", state.RequiredMin);
+            long peer = state.PeerSecTotal();
+            if (peer > 0) status += "  (+" + ClockText(peer) + " from other devices)";
             StatusText.Text = status;
 
             UnlockButton.IsEnabled = state.CanUnlock();

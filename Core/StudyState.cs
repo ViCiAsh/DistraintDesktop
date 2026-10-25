@@ -13,6 +13,15 @@ namespace Distraint.Core
         public string Path { get; set; }
     }
 
+    public sealed class PeerInfo
+    {
+        public string Name { get; set; }
+        public string Day { get; set; }
+        public long Seconds { get; set; }
+        public long LastSyncMs { get; set; }
+        public int ResetHour { get; set; }
+    }
+
     /// <summary>Everything Distraint remembers. Serialized as JSON to %AppData%\Distraint\state.json.</summary>
     public sealed class StateData
     {
@@ -29,6 +38,11 @@ namespace Distraint.Core
         public bool RunAsAdmin { get; set; }
         public double WindowW { get; set; }
         public double WindowH { get; set; }
+        public string DeviceId { get; set; }
+        public string DeviceName { get; set; }
+        public bool SyncEnabled { get; set; }
+        public string Secret { get; set; }
+        public Dictionary<string, PeerInfo> Peers { get; set; } = new Dictionary<string, PeerInfo>();
 
         // Queued setting changes (key -> value), applied at the next reset
         public Dictionary<string, int> Pending { get; set; } = new Dictionary<string, int>();
@@ -348,7 +362,7 @@ namespace Distraint.Core
             return IndividualActive ? perApp * d.StudyApps.Count : perApp;
         }
 
-        public long TotalStudiedSec()
+        public long LocalStudiedSec()
         {
             if (IndividualActive)
             {
@@ -360,6 +374,7 @@ namespace Distraint.Core
             return d.StudiedSec + AppStudySec();
         }
 
+        public long TotalStudiedSec() => LocalStudiedSec() + PeerSecTotal();
         public bool RequirementMet() => TotalStudiedSec() >= GoalSec();
 
         // ---------------- unlocking ----------------
@@ -413,6 +428,64 @@ namespace Distraint.Core
             SetPending("mode", minutes == 0 ? ModeRestOfDay : ModeTimed);
             if (minutes > 0) SetPending("timed_min", minutes);
         }
+        // ---------------- sync between devices ----------------
+        public bool SyncEnabled => d.SyncEnabled;
+        public void SetSyncEnabled(bool on) { d.SyncEnabled = on; Save(); }
+        public string DeviceId
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(d.DeviceId)) { d.DeviceId = Guid.NewGuid().ToString("N"); Save(); }
+                return d.DeviceId;
+            }
+        }
+        public string DeviceName => string.IsNullOrWhiteSpace(d.DeviceName) ? Environment.MachineName : d.DeviceName;
+        public string Secret => d.Secret;
+
+        public string EnsureSecret()
+        {
+            if (string.IsNullOrEmpty(d.Secret))
+            {
+                d.Secret = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+                Save();
+            }
+            return d.Secret;
+        }
+
+        public string CurrentDayKey()
+        {
+            long ms = d.DayStart > 0 ? d.DayStart : Now();
+            return DateTimeOffset.FromUnixTimeMilliseconds(ms).LocalDateTime
+                .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        public long PeerSecTotal()
+        {
+            string day = CurrentDayKey();
+            return d.Peers.Values.Where(p => p.Day == day).Sum(p => p.Seconds);
+        }
+
+        public void AddPeer(string id, string name)
+        {
+            if (!d.Peers.TryGetValue(id, out PeerInfo p)) { p = new PeerInfo(); d.Peers[id] = p; }
+            p.Name = name;
+            p.LastSyncMs = Now();
+            Save();
+        }
+
+        public void MergePeer(string id, string name, string day, long seconds, int resetHour)
+        {
+            if (!d.Peers.TryGetValue(id, out PeerInfo p)) { p = new PeerInfo(); d.Peers[id] = p; }
+            p.Name = name;
+            p.ResetHour = resetHour;
+            p.LastSyncMs = Now();
+            if (p.Day == day) p.Seconds = Math.Max(p.Seconds, seconds);
+            else { p.Day = day; p.Seconds = seconds; }
+            Save();
+        }
+
+        public List<PeerInfo> PeerList() => d.Peers.Values.ToList();
+        public void ForgetPeers() { d.Peers.Clear(); d.Secret = null; Save(); }
 
         // ---------------- strict lock ----------------
         public HashSet<string> StrictApps() => new HashSet<string>(d.StrictApps);

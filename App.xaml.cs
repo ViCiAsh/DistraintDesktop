@@ -20,6 +20,7 @@ namespace Distraint
         private EventWaitHandle showEvent;
         private System.Windows.Forms.NotifyIcon tray;
         private Blocker blocker;
+        public SyncService Sync { get; private set; }
         private MainWindow main;
 
         /// <summary>True once the user really exits (so MainWindow stops turning "close" into "hide").</summary>
@@ -52,6 +53,8 @@ namespace Distraint
 
             blocker = new Blocker();
             blocker.Start();
+            Sync = new SyncService(state, a => Dispatcher.Invoke(a));
+            if (state.SyncEnabled) Sync.Start();
             main = new MainWindow();
 
             bool firstRun = !state.SetupDone;
@@ -150,6 +153,7 @@ namespace Distraint
             }
             IsExiting = true;
             blocker.Stop();
+            Sync?.Stop();
             main?.Close();
             Shutdown();
         }

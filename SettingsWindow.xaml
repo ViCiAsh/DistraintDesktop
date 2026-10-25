@@ -67,6 +67,20 @@
                 </StackPanel>
             </Border>
 
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="Sync" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Share today's study time with your other devices on the same Wi-Fi."
+                   TextWrapping="Wrap" Margin="0,6,0,10" Foreground="{DynamicResource SubTextBrush}"/>
+                    <CheckBox x:Name="SyncCheck" Content="Turn on sync" Checked="Sync_Changed" Unchecked="Sync_Changed"/>
+                    <TextBlock x:Name="SyncStatus" TextWrapping="Wrap" Margin="30,8,0,10" Foreground="{DynamicResource SubTextBrush}"/>
+                    <WrapPanel>
+                        <Button x:Name="PairButton" Content="Pair a device..." Margin="0,0,8,0" Click="Pair_Click"/>
+                        <Button Content="Forget all devices" Click="ForgetSync_Click"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource Card}">
                 <StackPanel>
                     <TextBlock Text="Protection" FontSize="16" FontWeight="SemiBold"/>

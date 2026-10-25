@@ -32,6 +32,8 @@ namespace Distraint
             (theme == StudyState.ThemeLight ? ThemeLight : theme == StudyState.ThemeDark ? ThemeDark : ThemeSystem).IsChecked = true;
             StartupCheck.IsChecked = Startup.IsEnabled();
             AdminCheck.IsChecked = state.RunAsAdmin;
+            SyncCheck.IsChecked = state.SyncEnabled;
+            RefreshSync();
             RefreshProtection();
 
             loading = false;
@@ -127,6 +129,52 @@ namespace Distraint
             if (StartupCheck.IsChecked == true && !Startup.Set(true, admin))
                 msg += "\n\nStart with Windows couldn't be set up for administrator mode (that needs Distraint to be running as administrator right now). It will ask for permission at each login instead. To avoid that, open Distraint once as administrator and toggle this option again.";
             MessageBox.Show(this, msg, "Distraint", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private SyncService Sync => ((App)Application.Current).Sync;
+
+        private void RefreshSync()
+        {
+            PairButton.IsEnabled = state.SyncEnabled;
+            var peers = state.PeerList();
+            if (peers.Count == 0) { SyncStatus.Text = state.SyncEnabled ? "No devices paired yet." : "Sync is off."; return; }
+            string day = state.CurrentDayKey();
+            var lines = new System.Collections.Generic.List<string>();
+            foreach (var p in peers)
+            {
+                string studied = p.Day == day ? TimeSpan.FromSeconds(p.Seconds).ToString(@"h\:mm\:ss") + " studied today" : "nothing studied today";
+                string last = DateTimeOffset.FromUnixTimeMilliseconds(p.LastSyncMs).LocalDateTime.ToString("HH:mm");
+                string note = p.ResetHour != state.RolloverHour && p.Day != null ? "  ⚠ different reset hour" : "";
+                lines.Add(p.Name + " · " + studied + " · last sync " + last + note);
+            }
+            SyncStatus.Text = string.Join("\n", lines);
+        }
+
+        private void Sync_Changed(object sender, RoutedEventArgs e)
+        {
+            if (loading) return;
+            bool on = SyncCheck.IsChecked == true;
+            state.SetSyncEnabled(on);
+            if (on) Sync.Start(); else Sync.Stop();
+            RefreshSync();
+        }
+
+        private void Pair_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Sync.IsRunning)
+            {
+                MessageBox.Show(this, "Sync couldn't start (the port may be in use). Try restarting Distraint.", "Distraint",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            new PairDialog(Sync) { Owner = this }.ShowDialog();
+            RefreshSync();
+        }
+
+        private void ForgetSync_Click(object sender, RoutedEventArgs e)
+        {
+            state.ForgetPeers();
+            RefreshSync();
         }
     }
 }
