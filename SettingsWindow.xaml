@@ -88,6 +88,8 @@
                     <Button x:Name="ProtectButton" HorizontalAlignment="Left" Click="Protect_Click"/>
                     <CheckBox x:Name="StartupCheck" Content="Start Distraint with Windows" Margin="0,16,0,0"
                               Checked="Startup_Changed" Unchecked="Startup_Changed"/>
+                    <CheckBox x:Name="WatchdogCheck" Content="Restart Distraint automatically if it's closed" Margin="0,12,0,0"
+          Checked="Watchdog_Changed" Unchecked="Watchdog_Changed"/>
                     <CheckBox x:Name="AdminCheck" Content="Always run Distraint as administrator" Margin="0,12,0,0"
           Checked="Admin_Changed" Unchecked="Admin_Changed"/>
                     <TextBlock Text="Needed to lock programs that run as administrator (many games). Windows asks for permission each time Distraint starts, except when it starts with Windows."

@@ -7,6 +7,7 @@ using Distraint.Core;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
+using System.Windows.Threading;
 
 namespace Distraint
 {
@@ -20,6 +21,7 @@ namespace Distraint
         private EventWaitHandle showEvent;
         private System.Windows.Forms.NotifyIcon tray;
         private Blocker blocker;
+        private DispatcherTimer watchdogTimer;
         public SyncService Sync { get; private set; }
         private MainWindow main;
 
@@ -28,6 +30,14 @@ namespace Distraint
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            int wd = Array.IndexOf(e.Args, "--watchdog");
+            if (wd >= 0)
+            {
+                string mainExe = e.Args.Length > wd + 1 ? e.Args[wd + 1] : null;   // where the real app lives
+                Watchdog.Run(() => Watchdog.StartMain(mainExe));
+                Environment.Exit(0);
+                return;
+            }
             // Optional: relaunch elevated (Settings > Protection > Run as administrator).
             if (StudyState.Instance.RunAsAdmin && !IsAdmin())
             {
@@ -55,6 +65,12 @@ namespace Distraint
             blocker.Start();
             Sync = new SyncService(state, a => Dispatcher.Invoke(a));
             if (state.SyncEnabled) Sync.Start();
+            watchdogTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+            watchdogTimer.Tick += (s, a) =>
+            {
+                if (state.WatchdogEnabled && !IsExiting && !Watchdog.WatchdogAlive()) Watchdog.StartWatchdog();
+            };
+            watchdogTimer.Start();
             main = new MainWindow();
 
             bool firstRun = !state.SetupDone;
@@ -152,6 +168,8 @@ namespace Distraint
                 if (dlg.ShowDialog() != true) return;
             }
             IsExiting = true;
+            watchdogTimer?.Stop();
+            Watchdog.RequestQuit();
             blocker.Stop();
             Sync?.Stop();
             main?.Close();
@@ -160,6 +178,8 @@ namespace Distraint
 
         protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
         {
+            watchdogTimer?.Stop();
+            Watchdog.RequestQuit();
             StudyState.Instance.FlushIfDirty(true);
             base.OnSessionEnding(e);
         }

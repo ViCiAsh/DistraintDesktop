@@ -35,6 +35,7 @@ namespace Distraint.Core
         public int BlockAction { get; set; }          // 0 minimize / 1 close window / 2 terminate
         public int Theme { get; set; }                // 0 system / 1 light / 2 dark
         public bool ProtectOn { get; set; } = true;
+        public bool WatchdogOn { get; set; } = true;
         public bool RunAsAdmin { get; set; }
         public double WindowW { get; set; }
         public double WindowH { get; set; }
@@ -160,6 +161,8 @@ namespace Distraint.Core
         public int RolloverHour => d.RolloverHour;
         public long ResetAt => d.ResetAt;
         public bool ProtectEnabled => d.ProtectOn;
+        public bool WatchdogEnabled => d.WatchdogOn;
+        public void SetWatchdogEnabled(bool on) { d.WatchdogOn = on; Save(); }
         public bool RunAsAdmin => d.RunAsAdmin;
         public void SetRunAsAdmin(bool on) { d.RunAsAdmin = on; Save(); }
         public void SetProtectEnabled(bool on) { d.ProtectOn = on; Save(); }

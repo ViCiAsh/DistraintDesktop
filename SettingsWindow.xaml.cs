@@ -32,6 +32,7 @@ namespace Distraint
             (theme == StudyState.ThemeLight ? ThemeLight : theme == StudyState.ThemeDark ? ThemeDark : ThemeSystem).IsChecked = true;
             StartupCheck.IsChecked = Startup.IsEnabled();
             AdminCheck.IsChecked = state.RunAsAdmin;
+            WatchdogCheck.IsChecked = state.WatchdogEnabled;
             SyncCheck.IsChecked = state.SyncEnabled;
             RefreshSync();
             RefreshProtection();
@@ -175,6 +176,30 @@ namespace Distraint
         {
             state.ForgetPeers();
             RefreshSync();
+        }
+        private void Watchdog_Changed(object sender, RoutedEventArgs e)
+        {
+            if (loading) return;
+            bool want = WatchdogCheck.IsChecked == true;
+            if (!want)
+            {
+                bool allowed = true;
+                if (state.StrictActiveNow())
+                {
+                    MessageBox.Show(this, "Can't turn this off during a strict lock.", "Distraint", MessageBoxButton.OK, MessageBoxImage.Information);
+                    allowed = false;
+                }
+                else if (state.ProtectEnabled)
+                {
+                    var dlg = new CodeDialog("Turn off the watchdog?",
+                        "Without it, ending Distraint in Task Manager stops all locking.")
+                    { Owner = this, Topmost = false };
+                    allowed = dlg.ShowDialog() == true;
+                }
+                if (!allowed) { loading = true; WatchdogCheck.IsChecked = true; loading = false; return; }
+            }
+            state.SetWatchdogEnabled(want);
+            if (want) Core.Watchdog.StartWatchdog(); else Core.Watchdog.RequestQuit();
         }
     }
 }
