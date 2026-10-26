@@ -62,7 +62,7 @@
                     <!-- The Viewbox scales the ring with the window -->
                     <Viewbox Grid.Row="0" Stretch="Uniform" MaxWidth="380" Margin="0,0,0,12">
                         <Grid Width="220" Height="220">
-                            <Ellipse Width="196" Height="196" Stroke="{DynamicResource LineBrush}" StrokeThickness="14"/>
+                            <Ellipse Width="210" Height="210" Stroke="{DynamicResource LineBrush}" StrokeThickness="14"/>
                             <Path x:Name="RingArc" Width="220" Height="220" Stroke="{DynamicResource AccentBrush}"
                                   StrokeThickness="14" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -71,8 +71,13 @@
                             </StackPanel>
                         </Grid>
                     </Viewbox>
-                    <TextBlock Grid.Row="1" x:Name="StatusText" TextWrapping="Wrap" TextAlignment="Center"
-                               Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,14"/>
+                    <StackPanel Grid.Row="1" Margin="0,0,0,14">
+                        <TextBlock x:Name="StatusText" TextWrapping="Wrap" TextAlignment="Center"
+               Foreground="{DynamicResource SubTextBrush}"/>
+                        <TextBlock x:Name="SyncText" TextWrapping="Wrap" TextAlignment="Center" FontSize="12" Margin="0,6,0,0"
+               Foreground="{DynamicResource SubTextBrush}" Cursor="Hand" Visibility="Collapsed"
+               MouseLeftButtonUp="SyncText_Click"/>
+                    </StackPanel>
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -137,8 +142,7 @@
                 </Border>
 
                 <!-- Strict lock (click opens the strict lock page) -->
-                <Border x:Name="StrictCard" Grid.Row="2" Style="{StaticResource Card}" Cursor="Hand"
-            MouseLeftButtonUp="StrictCard_Click">
+                <Border x:Name="StrictCard" Grid.Row="2" Style="{StaticResource Card}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -150,8 +154,8 @@
                         </Grid>
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
                             <StackPanel>
-                                <TextBlock x:Name="StrictEmpty" Text="Click to set up apps that stay closed no matter what."
-                               Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="StrictEmpty" Text="No strict apps yet. Use + Add, then Strict lock."
+           Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"/>
                                 <ItemsControl x:Name="StrictList" ItemTemplate="{StaticResource AppRowTemplate}"/>
                             </StackPanel>
                         </ScrollViewer>

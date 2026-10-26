@@ -28,6 +28,8 @@ namespace Distraint
             (state.Shown("limit_style") == StudyState.LimitPerApp ? LimitEach : LimitShared).IsChecked = true;
             int act = state.Shown("block_action");
             (act == StudyState.ActionTerminate ? ActKill : act == StudyState.ActionClose ? ActClose : ActMin).IsChecked = true;
+            int bg = state.Shown("bg_action");
+            (bg == 2 ? BgKill : bg == 1 ? BgClose : BgOff).IsChecked = true;
             int theme = state.ThemeMode;
             (theme == StudyState.ThemeLight ? ThemeLight : theme == StudyState.ThemeDark ? ThemeDark : ThemeSystem).IsChecked = true;
             StartupCheck.IsChecked = Startup.IsEnabled();
@@ -62,6 +64,7 @@ namespace Distraint
             state.SetPending("block_action",
                 ActKill.IsChecked == true ? StudyState.ActionTerminate :
                 ActClose.IsChecked == true ? StudyState.ActionClose : StudyState.ActionMinimize);
+            state.SetPending("bg_action", BgKill.IsChecked == true ? 2 : BgClose.IsChecked == true ? 1 : 0);
         }
 
         // ---- theme: the one setting that applies at once ----

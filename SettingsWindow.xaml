@@ -58,6 +58,19 @@
 
             <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                 <StackPanel>
+                    <TextBlock Text="Locked apps in the background" FontSize="16" FontWeight="SemiBold"/>
+                    <WrapPanel Margin="0,12,0,0">
+                        <RadioButton x:Name="BgOff" GroupName="bg" Content="Leave alone" Style="{StaticResource Segment}"/>
+                        <RadioButton x:Name="BgClose" GroupName="bg" Content="Close their windows" Style="{StaticResource Segment}"/>
+                        <RadioButton x:Name="BgKill" GroupName="bg" Content="Terminate them" Style="{StaticResource Segment}"/>
+                    </WrapPanel>
+                    <TextBlock Text="What happens to a locked app that is running but not in front. It is given 5 seconds first. Apps that hide in the tray when closed (Discord, LINE) need Terminate. Stricter settings apply at once, looser ones at the next reset."
+                   TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource SubTextBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
                     <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold"/>
                     <WrapPanel Margin="0,12,0,0">
                         <RadioButton x:Name="ThemeSystem" GroupName="theme" Content="System" Style="{StaticResource Segment}" Checked="Theme_Checked"/>

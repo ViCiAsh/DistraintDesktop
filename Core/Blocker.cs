@@ -48,6 +48,10 @@ namespace Distraint.Core
         private IntPtr graceHwnd;
         private BannerWindow graceBanner;
 
+        // background sweeper
+        private readonly BackgroundSweeper sweeper;
+        private long lastSweepMs;
+
         // warning banner
         private BannerWindow warnBanner;
         private long warnHideAt;
@@ -58,6 +62,9 @@ namespace Distraint.Core
             string self = Process.GetCurrentProcess().MainModule?.FileName;
             selfExe = self == null ? "distraint.exe" : System.IO.Path.GetFileName(self).ToLowerInvariant();
             timer.Tick += (s, e) => Tick();
+            sweeper = new BackgroundSweeper(
+    () => state.BgAction, LockedNow, Native.Snapshot, SweepAct, () => Environment.TickCount64,
+    (uint)Process.GetCurrentProcess().Id, new HashSet<string> { selfExe, "distraint-antikill.exe" });
         }
 
         public void Start() { lastMs = clock.ElapsedMilliseconds; timer.Start(); }
@@ -73,11 +80,23 @@ namespace Distraint.Core
 
             state.Rollover();
             var fg = Native.Foreground();
+            string fgResolved = null;
             if (fg.exe != null && fg.exe != selfExe)
             {
                 string exe = ResolveLocked(fg.pid, fg.exe);       // the locked app this window belongs to, if any
+                fgResolved = exe;
                 Track(exe, delta);
                 Enforce(fg.hwnd, exe, exe == fg.exe ? fg.path : state.PathOf(exe));
+            }
+
+            // Every 2 s: also deal with locked apps that are running behind the scenes.
+            if (now - lastSweepMs >= 2000)
+            {
+                lastSweepMs = now;
+                var skip = new HashSet<string>();
+                if (fgResolved != null) skip.Add(fgResolved);                       // the foreground logic is handling this one
+                if (graceActive && currentLocked != null) skip.Add(currentLocked);  // it is in its "Time's up" countdown
+                sweeper.Sweep(skip);
             }
             UpdateGrace();
             if (warnBanner != null && Environment.TickCount64 >= warnHideAt) RemoveWarn();
@@ -323,6 +342,27 @@ namespace Distraint.Core
                 }
             }
             catch { }
+        }
+        /// <summary>Locked apps with no time left right now (locked list with no time, plus strict apps during a lock).</summary>
+        private HashSet<string> LockedNow()
+        {
+            var set = new HashSet<string>();
+            foreach (string exe in state.Blocked()) if (state.MsLeftFor(exe) <= 0) set.Add(exe);
+            foreach (string exe in state.StrictApps()) if (state.IsStrictLocked(exe)) set.Add(exe);
+            return set;
+        }
+
+        private static void SweepAct(int mode, uint pid)
+        {
+            try
+            {
+                using (Process p = Process.GetProcessById((int)pid))
+                {
+                    if (mode == BackgroundSweeper.ModeTerminate) p.Kill(true);
+                    else p.CloseMainWindow();
+                }
+            }
+            catch { /* already gone, or an administrator process we can't touch */ }
         }
     }
 }

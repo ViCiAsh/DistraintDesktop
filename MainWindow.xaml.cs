@@ -171,8 +171,6 @@ namespace Distraint
             LoadLists();
         }
 
-        private void StrictCard_Click(object sender, MouseButtonEventArgs e) => OpenStrict();
-
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             new SettingsWindow { Owner = this }.ShowDialog();
@@ -319,6 +317,7 @@ namespace Distraint
             StrictList.ItemsSource = strictRows;
             StrictCount.Text = strict.Count.ToString(CultureInfo.InvariantCulture);
             StrictEmpty.Visibility = strict.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            RefreshSyncLine();
         }
 
         private AppRow NewRow(string exe, string note) => new AppRow
@@ -340,5 +339,32 @@ namespace Distraint
             public Set(HashSet<string> items) { Items = items; }
             public bool Has(string s) => Items.Contains(s);
         }
+        private void SyncText_Click(object sender, MouseButtonEventArgs e) => SettingsButton_Click(sender, e);
+
+        /// <summary>The small "who synced when" line under the status text. Hidden when sync was never used.</summary>
+        private void RefreshSyncLine()
+        {
+            var peers = state.PeerList();
+            if (!state.SyncEnabled && peers.Count == 0) { SyncText.Visibility = Visibility.Collapsed; return; }
+            SyncText.Visibility = Visibility.Visible;
+            if (!state.SyncEnabled) { SyncText.Text = "Sync is off"; return; }
+            if (peers.Count == 0) { SyncText.Text = "Sync is on, no device paired yet. Click to set up."; return; }
+
+            string day = state.CurrentDayKey();
+            long nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var lines = new List<string>();
+            foreach (var p in peers.OrderBy(x => x.Name))
+            {
+                long age = Math.Max(0, (nowMs - p.LastSyncMs) / 1000);
+                string ago = age < 60 ? "just now"
+                           : age < 3600 ? (age / 60) + " min ago"
+                           : age < 86400 ? (age / 3600) + " h ago"
+                           : (age / 86400) + " d ago";
+                string studied = p.Day == day ? ClockText(p.Seconds) + " studied" : "nothing studied today";
+                lines.Add(p.Name + " - " + studied + " - synced " + ago);
+            }
+            SyncText.Text = string.Join("\n", lines);
+        }
+
     }
 }

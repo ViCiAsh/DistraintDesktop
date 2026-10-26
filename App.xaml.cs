@@ -105,6 +105,7 @@ namespace Distraint
             {
                 Source = new Uri(dark ? "Themes/Dark.xaml" : "Themes/Light.xaml", UriKind.Relative)
             };
+            ApplyTrayTheme();
         }
 
         private static bool SystemUsesDark()
@@ -131,6 +132,7 @@ namespace Distraint
                 ContextMenuStrip = menu
             };
             tray.DoubleClick += (s, e) => ShowMain();
+            ApplyTrayTheme();
         }
 
         private static System.Drawing.Icon MakeIcon()
@@ -191,5 +193,93 @@ namespace Distraint
             try { mutex?.ReleaseMutex(); } catch { }
             base.OnExit(e);
         }
+
+        /// <summary>Colours for the tray menu, taken from the current theme.</summary>
+        private sealed class TrayColors : System.Windows.Forms.ProfessionalColorTable
+        {
+            private readonly System.Drawing.Color bg, hover, line;
+            public TrayColors(System.Drawing.Color bg, System.Drawing.Color hover, System.Drawing.Color line)
+            {
+                this.bg = bg; this.hover = hover; this.line = line;
+                UseSystemColors = false;
+            }
+            public override System.Drawing.Color ToolStripDropDownBackground => bg;
+            public override System.Drawing.Color ImageMarginGradientBegin => bg;
+            public override System.Drawing.Color ImageMarginGradientMiddle => bg;
+            public override System.Drawing.Color ImageMarginGradientEnd => bg;
+            public override System.Drawing.Color MenuBorder => line;
+            public override System.Drawing.Color MenuItemBorder => hover;
+            public override System.Drawing.Color MenuItemSelected => hover;
+            public override System.Drawing.Color MenuItemSelectedGradientBegin => hover;
+            public override System.Drawing.Color MenuItemSelectedGradientEnd => hover;
+            public override System.Drawing.Color MenuItemPressedGradientBegin => hover;
+            public override System.Drawing.Color MenuItemPressedGradientMiddle => hover;
+            public override System.Drawing.Color MenuItemPressedGradientEnd => hover;
+            public override System.Drawing.Color SeparatorDark => line;
+            public override System.Drawing.Color SeparatorLight => line;
+        }
+
+        /// <summary>Paints the tray menu in the current theme's colours. Called at start and whenever the theme changes.</summary>
+        private void ApplyTrayTheme()
+        {
+            if (tray?.ContextMenuStrip == null) return;
+
+            System.Drawing.Color C(string key)
+            {
+                var c = ((System.Windows.Media.SolidColorBrush)Resources[key]).Color;
+                return System.Drawing.Color.FromArgb(c.R, c.G, c.B);
+            }
+            System.Drawing.Color bg = C("CardBrush"), hover = C("CardAltBrush"), line = C("LineBrush"), text = C("TextBrush");
+
+            var menu = tray.ContextMenuStrip;
+            menu.Renderer = new TrayRenderer(new TrayColors(bg, hover, line), hover, text);
+            menu.BackColor = bg;
+            menu.ForeColor = text;
+            menu.ShowImageMargin = false;
+            foreach (System.Windows.Forms.ToolStripItem item in menu.Items)
+            {
+                item.ForeColor = text;
+                item.BackColor = bg;
+                item.Padding = new System.Windows.Forms.Padding(6, 4, 6, 4);
+            }
+        }
+        /// <summary>Draws the hovered tray-menu row as a soft rounded fill in the theme's hover colour, with theme-coloured text.</summary>
+        private sealed class TrayRenderer : System.Windows.Forms.ToolStripProfessionalRenderer
+        {
+            private readonly System.Drawing.Color hover, text;
+
+            public TrayRenderer(TrayColors colors, System.Drawing.Color hover, System.Drawing.Color text) : base(colors)
+            {
+                this.hover = hover;
+                this.text = text;
+                RoundedEdges = false;
+            }
+
+            protected override void OnRenderMenuItemBackground(System.Windows.Forms.ToolStripItemRenderEventArgs e)
+            {
+                if (!e.Item.Selected || !e.Item.Enabled) return;      // normal rows keep the menu background
+
+                var r = new System.Drawing.Rectangle(4, 1, e.Item.Width - 8, e.Item.Height - 2);
+                int d = 10;                                           // corner diameter
+                using (var path = new System.Drawing.Drawing2D.GraphicsPath())
+                using (var brush = new System.Drawing.SolidBrush(hover))
+                {
+                    path.AddArc(r.X, r.Y, d, d, 180, 90);
+                    path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+                    path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+                    path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+                    path.CloseFigure();
+                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    e.Graphics.FillPath(brush, path);
+                }
+            }
+
+            protected override void OnRenderItemText(System.Windows.Forms.ToolStripItemTextRenderEventArgs e)
+            {
+                e.TextColor = text;                                   // keep the text readable while hovered
+                base.OnRenderItemText(e);
+            }
+        }
+
     }
 }

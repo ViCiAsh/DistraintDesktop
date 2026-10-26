@@ -33,6 +33,7 @@ namespace Distraint.Core
         public int LimitStyle { get; set; }           // 0 shared / 1 per app
         public int RolloverHour { get; set; } = 4;
         public int BlockAction { get; set; }          // 0 minimize / 1 close window / 2 terminate
+        public int BgAction { get; set; }             // 0 leave alone / 1 close windows / 2 terminate
         public int Theme { get; set; }                // 0 system / 1 light / 2 dark
         public bool ProtectOn { get; set; } = true;
         public bool WatchdogOn { get; set; } = true;
@@ -95,7 +96,7 @@ namespace Distraint.Core
         public const int ActionMinimize = 0, ActionClose = 1, ActionTerminate = 2;
 
         private static readonly string[] SettingKeys =
-            { "required_min", "mode", "timed_min", "rollover_hour", "combine", "limit_style", "block_action" };
+            { "required_min", "mode", "timed_min", "rollover_hour", "combine", "limit_style", "block_action", "bg_action" };
 
         public static StudyState Instance { get; } = new StudyState();
 
@@ -229,10 +230,12 @@ namespace Distraint.Core
         // ---------------- settings (changes wait for the next reset) ----------------
         public int RequiredMin => d.RequiredMin;
         public int Mode => d.Mode;
+
         public int TimedMin => d.TimedMin;
         public int CombineMode => d.Combine;
         public int LimitStyle => d.LimitStyle;
         public int BlockAction => d.BlockAction;
+        public int BgAction => d.BgAction;
 
         private int Live(string key)
         {
@@ -244,6 +247,7 @@ namespace Distraint.Core
                 case "combine": return d.Combine;
                 case "limit_style": return d.LimitStyle;
                 case "block_action": return d.BlockAction;
+                case "bg_action": return d.BgAction;
                 default: return d.RolloverHour;   // "rollover_hour"
             }
         }
@@ -259,12 +263,14 @@ namespace Distraint.Core
                 case "limit_style": d.LimitStyle = v; break;
                 case "block_action": d.BlockAction = v; break;
                 case "rollover_hour": d.RolloverHour = v; break;
+                case "bg_action": d.BgAction = v; break;
             }
         }
 
         /// <summary>Queues a change for the next reset. The very first choice of combine / required_min / limit_style applies at once.</summary>
         public void SetPending(string key, int value)
         {
+            if (key == "bg_action" && value > d.BgAction) { d.BgAction = value; d.Pending.Remove(key); Save(); return; }   // stricter applies at once
             if (key == "combine" && !d.CombineChosen && value != d.Combine) { ChooseCombineFirstTime(value); return; }
             if (key == "required_min" && !d.RequiredChosen && value != d.RequiredMin) { ChooseRequiredFirstTime(value); return; }
             if (key == "limit_style" && !d.LimitChosen && value != d.LimitStyle) { ChooseLimitFirstTime(value); return; }
