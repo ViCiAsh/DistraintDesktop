@@ -1,22 +1,39 @@
-.vs/
+# Build output
 bin/
 obj/
-.env
-.env.*
-appsettings.Development.json
-appsettings.Local.json
-secrets.json
-*.pfx
-*.snk
-*.pem
-*.key
-*.pubxml.user
+publish/
+installer-output/
+
+# Visual Studio
+.vs/
 *.user
 *.suo
+*.userprefs
+*.rsuser
+launchSettings.json
+*.DotSettings.user
+ipch/
+*.vsidx
+
+# NuGet and tools
+*.nupkg
 packages/
-TestResult/
+.nuget/
+TestResults/
 *.log
-*.db
-*.sqlite
+
+# Installer and packaging output
+*.msi
+Distraint-Setup.exe
+
+# OS junk
 Thumbs.db
-desktop.ini
+Desktop.ini
+.DS_Store
+
+# Secrets and local data (never commit these)
+*.pfx
+*.snk
+*.key
+state.json
+watchdog.quit

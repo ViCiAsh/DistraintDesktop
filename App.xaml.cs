@@ -38,6 +38,7 @@ namespace Distraint
                 Environment.Exit(0);
                 return;
             }
+            if (e.Args.Contains("--prepare-uninstall")) { ApplyTheme(); Environment.Exit(PrepareForRemoval()); return; }
             // Optional: relaunch elevated (Settings > Protection > Run as administrator).
             if (StudyState.Instance.RunAsAdmin && !IsAdmin())
             {
@@ -279,6 +280,35 @@ namespace Distraint
                 e.TextColor = text;                                   // keep the text readable while hovered
                 base.OnRenderItemText(e);
             }
+        }
+        /// <summary>
+        /// Called by the installer before it replaces or removes Distraint. Refuses during a strict lock, asks for the typed code
+        /// while protection is on, then lets the watchdog stand down and ends the app. Exit code 0 = the installer may continue.
+        /// </summary>
+        private static int PrepareForRemoval()
+        {
+            var s = StudyState.Instance;
+            if (s.StrictActiveNow())
+            {
+                MessageBox.Show("Distraint can't be removed during a strict lock.", "Distraint", MessageBoxButton.OK, MessageBoxImage.Information);
+                return 1;
+            }
+            if (s.ProtectEnabled)
+            {
+                var dlg = new CodeDialog("Remove Distraint?",
+                    "Removing Distraint stops all locking. To continue, type the 16 characters below by hand.");
+                if (dlg.ShowDialog() != true) return 1;
+            }
+            Watchdog.RequestQuit();
+            Thread.Sleep(2500);                                   // let the watchdog stand down before the app is ended
+            int self = Process.GetCurrentProcess().Id;
+            foreach (string name in new[] { "Distraint", "Distraint-Antikill" })
+                foreach (Process p in Process.GetProcessesByName(name))
+                {
+                    try { if (p.Id != self) p.Kill(true); } catch { }
+                    p.Dispose();
+                }
+            return 0;
         }
 
     }
